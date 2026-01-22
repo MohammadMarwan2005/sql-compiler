@@ -40,6 +40,56 @@ public interface SQLParserListener extends ParseTreeListener {
 	 */
 	void exitStatement(SQLParser.StatementContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link SQLParser#cteStatement}.
+	 * @param ctx the parse tree
+	 */
+	void enterCteStatement(SQLParser.CteStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SQLParser#cteStatement}.
+	 * @param ctx the parse tree
+	 */
+	void exitCteStatement(SQLParser.CteStatementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SQLParser#cteSelectStatement}.
+	 * @param ctx the parse tree
+	 */
+	void enterCteSelectStatement(SQLParser.CteSelectStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SQLParser#cteSelectStatement}.
+	 * @param ctx the parse tree
+	 */
+	void exitCteSelectStatement(SQLParser.CteSelectStatementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SQLParser#cteUpdateStatement}.
+	 * @param ctx the parse tree
+	 */
+	void enterCteUpdateStatement(SQLParser.CteUpdateStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SQLParser#cteUpdateStatement}.
+	 * @param ctx the parse tree
+	 */
+	void exitCteUpdateStatement(SQLParser.CteUpdateStatementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SQLParser#cteDeleteStatement}.
+	 * @param ctx the parse tree
+	 */
+	void enterCteDeleteStatement(SQLParser.CteDeleteStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SQLParser#cteDeleteStatement}.
+	 * @param ctx the parse tree
+	 */
+	void exitCteDeleteStatement(SQLParser.CteDeleteStatementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link SQLParser#declareCursorStatement}.
+	 * @param ctx the parse tree
+	 */
+	void enterDeclareCursorStatement(SQLParser.DeclareCursorStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SQLParser#declareCursorStatement}.
+	 * @param ctx the parse tree
+	 */
+	void exitDeclareCursorStatement(SQLParser.DeclareCursorStatementContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link SQLParser#selectStatement}.
 	 * @param ctx the parse tree
 	 */

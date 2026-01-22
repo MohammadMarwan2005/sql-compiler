@@ -33,6 +33,44 @@ statement
     |   dropIndexStatement SEMICOLON?
     |   createDatabaseStatement SEMICOLON?
     |   dropDatabaseStatement SEMICOLON?
+    |   cteStatement SEMICOLON?
+    |   declareCursorStatement SEMICOLON?
+    ;
+
+// ==================== Common Table Expression (CTE) ====================
+// Syntax: WITH cte_name AS ( select_statement ) followed by SELECT/UPDATE/DELETE
+// Note: Only single CTE supported; recursive CTEs are out of scope
+cteStatement
+    :   WITH identifier AS LPAREN selectStatement RPAREN
+        (cteSelectStatement | cteUpdateStatement | cteDeleteStatement)
+    ;
+
+cteSelectStatement
+    :   SELECT (DISTINCT)? selectList
+        FROM tableName
+        (WHERE expression)?
+        (GROUP BY columnList)?
+        (HAVING expression)?
+        (ORDER BY orderByList)?
+        (LIMIT INT)?
+    ;
+
+cteUpdateStatement
+    :   UPDATE tableName
+        SET assignmentList
+        (WHERE expression)?
+    ;
+
+cteDeleteStatement
+    :   DELETE FROM tableName
+        (WHERE expression)?
+    ;
+
+// ==================== Cursor Declaration ====================
+// Syntax: DECLARE cursor_name CURSOR FOR select_statement
+// Note: Only declaration supported; OPEN/FETCH/CLOSE/DEALLOCATE are out of scope
+declareCursorStatement
+    :   DECLARE identifier CURSOR FOR selectStatement
     ;
 
 // SELECT statement

@@ -31,6 +31,36 @@ public interface SQLParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStatement(SQLParser.StatementContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link SQLParser#cteStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCteStatement(SQLParser.CteStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SQLParser#cteSelectStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCteSelectStatement(SQLParser.CteSelectStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SQLParser#cteUpdateStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCteUpdateStatement(SQLParser.CteUpdateStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SQLParser#cteDeleteStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCteDeleteStatement(SQLParser.CteDeleteStatementContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SQLParser#declareCursorStatement}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDeclareCursorStatement(SQLParser.DeclareCursorStatementContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link SQLParser#selectStatement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

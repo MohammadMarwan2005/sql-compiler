@@ -471,6 +471,78 @@ public class TestCaseManager {
             """,
             "Combined Phase 1 features: brackets, NVARCHAR, schema, CLUSTERED, IN", true);
 
+        // ==================== CTE (Common Table Expressions) ====================
+        // Valid CTE test cases - syntax only
+        addTestCase("CTE", "CTE_SIMPLE_SELECT",
+            """
+            CREATE TABLE employees (id INT PRIMARY KEY, name VARCHAR(50), dept_id INT);
+            WITH emp_cte AS (SELECT id, name FROM employees)
+            SELECT * FROM emp_cte;
+            """,
+            "Simple CTE with SELECT", true);
+
+        addTestCase("CTE", "CTE_WITH_WHERE",
+            """
+            CREATE TABLE orders (order_id INT PRIMARY KEY, customer_id INT, total DECIMAL(10,2));
+            WITH high_value AS (SELECT order_id, total FROM orders WHERE total > 1000)
+            SELECT * FROM high_value WHERE total > 5000;
+            """,
+            "CTE with WHERE clause in both CTE and main query", true);
+
+        addTestCase("CTE", "CTE_WITH_UPDATE",
+            """
+            CREATE TABLE products (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2));
+            WITH expensive AS (SELECT id FROM products WHERE price > 100)
+            UPDATE products SET price = 99 WHERE id IN (1, 2, 3);
+            """,
+            "CTE followed by UPDATE statement", true);
+
+        addTestCase("CTE", "CTE_WITH_DELETE",
+            """
+            CREATE TABLE logs (id INT PRIMARY KEY, message VARCHAR(100), created_at DATE);
+            WITH old_logs AS (SELECT id FROM logs)
+            DELETE FROM logs WHERE id = 1;
+            """,
+            "CTE followed by DELETE statement", true);
+
+        addTestCase("CTE", "CTE_WITH_BRACKET_IDENT",
+            """
+            CREATE TABLE [My Table] ([ID] INT PRIMARY KEY, [Name] VARCHAR(50));
+            WITH [my cte] AS (SELECT [ID], [Name] FROM [My Table])
+            SELECT * FROM [my cte];
+            """,
+            "CTE with bracket identifiers", true);
+
+        // ==================== CURSOR Declaration ====================
+        // Valid cursor declaration test cases - syntax only
+        addTestCase("CURSOR", "CURSOR_SIMPLE",
+            """
+            CREATE TABLE employees (id INT PRIMARY KEY, name VARCHAR(50));
+            DECLARE emp_cursor CURSOR FOR SELECT id, name FROM employees;
+            """,
+            "Simple cursor declaration", true);
+
+        addTestCase("CURSOR", "CURSOR_WITH_WHERE",
+            """
+            CREATE TABLE orders (order_id INT PRIMARY KEY, status VARCHAR(20), total DECIMAL(10,2));
+            DECLARE order_cursor CURSOR FOR SELECT order_id, total FROM orders WHERE status = 'pending';
+            """,
+            "Cursor declaration with WHERE clause", true);
+
+        addTestCase("CURSOR", "CURSOR_WITH_ORDER_BY",
+            """
+            CREATE TABLE products (id INT PRIMARY KEY, name VARCHAR(50), price DECIMAL(10,2));
+            DECLARE product_cursor CURSOR FOR SELECT name, price FROM products ORDER BY price DESC;
+            """,
+            "Cursor declaration with ORDER BY", true);
+
+        addTestCase("CURSOR", "CURSOR_WITH_BRACKET_IDENT",
+            """
+            CREATE TABLE [Sales Data] ([ID] INT PRIMARY KEY, [Amount] DECIMAL(10,2));
+            DECLARE [sales cursor] CURSOR FOR SELECT [ID], [Amount] FROM [Sales Data];
+            """,
+            "Cursor declaration with bracket identifiers", true);
+
         // ==================== FUTURE - AGGREGATE FUNCTIONS ====================
         addTestCase("FUTURE_AGGREGATES", "SELECT_AVG",
             "SELECT AVG(unitprice) FROM products;",

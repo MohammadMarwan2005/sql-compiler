@@ -32,6 +32,14 @@ DISTINCT: [dD][iI][sS][tT][iI][nN][cC][tT];
 ASC:    [aA][sS][cC];
 DESC:   [dD][eE][sS][cC];
 
+// Keywords - CTE
+WITH:       [wW][iI][tT][hH];
+
+// Keywords - Cursor
+DECLARE:    [dD][eE][cC][lL][aA][rR][eE];
+CURSOR:     [cC][uU][rR][sS][oO][rR];
+FOR:        [fF][oO][rR];
+
 // Keywords - DDL
 CREATE:     [cC][rR][eE][aA][tT][eE];
 DROP:       [dD][rR][oO][pP];

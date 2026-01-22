@@ -687,6 +687,97 @@ public class SemanticAnalyzer extends SQLParserBaseVisitor<SQLType> {
         return null;
     }
 
+    // ==================== CTE (Common Table Expression) Visitors ====================
+    // Note: Syntax-only support - no semantic validation of CTE references
+
+    @Override
+    public SQLType visitCteStatement(SQLParser.CteStatementContext ctx) {
+        // Visit the CTE definition (SELECT inside the WITH clause)
+        if (ctx.selectStatement() != null) {
+            visit(ctx.selectStatement());
+        }
+        
+        // Visit the main statement that uses the CTE
+        if (ctx.cteSelectStatement() != null) {
+            visit(ctx.cteSelectStatement());
+        } else if (ctx.cteUpdateStatement() != null) {
+            visit(ctx.cteUpdateStatement());
+        } else if (ctx.cteDeleteStatement() != null) {
+            visit(ctx.cteDeleteStatement());
+        }
+        
+        return null;
+    }
+
+    @Override
+    public SQLType visitCteSelectStatement(SQLParser.CteSelectStatementContext ctx) {
+        // Process FROM clause
+        if (ctx.tableName() != null) {
+            processTableReference(ctx.tableName());
+        }
+        
+        // Process SELECT list
+        if (ctx.selectList() != null) {
+            visit(ctx.selectList());
+        }
+        
+        // Process WHERE clause
+        List<SQLParser.ExpressionContext> expressions = ctx.expression();
+        if (ctx.WHERE() != null && !expressions.isEmpty()) {
+            visit(expressions.get(0));
+        }
+        
+        return null;
+    }
+
+    @Override
+    public SQLType visitCteUpdateStatement(SQLParser.CteUpdateStatementContext ctx) {
+        // Process table reference
+        if (ctx.tableName() != null) {
+            processTableReference(ctx.tableName());
+        }
+        
+        // Process assignments
+        if (ctx.assignmentList() != null) {
+            visit(ctx.assignmentList());
+        }
+        
+        // Process WHERE clause
+        if (ctx.expression() != null) {
+            visit(ctx.expression());
+        }
+        
+        return null;
+    }
+
+    @Override
+    public SQLType visitCteDeleteStatement(SQLParser.CteDeleteStatementContext ctx) {
+        // Process table reference
+        if (ctx.tableName() != null) {
+            processTableReference(ctx.tableName());
+        }
+        
+        // Process WHERE clause
+        if (ctx.expression() != null) {
+            visit(ctx.expression());
+        }
+        
+        return null;
+    }
+
+    // ==================== Cursor Declaration Visitor ====================
+    // Note: Syntax-only support - no state tracking or runtime behavior
+
+    @Override
+    public SQLType visitDeclareCursorStatement(SQLParser.DeclareCursorStatementContext ctx) {
+        // Just visit the SELECT statement inside the cursor declaration
+        // No semantic validation - cursor name is not tracked
+        if (ctx.selectStatement() != null) {
+            visit(ctx.selectStatement());
+        }
+        return null;
+    }
+
     // ==================== DML Statement Visitors ====================
 
     @Override
