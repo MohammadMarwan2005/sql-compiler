@@ -42,6 +42,16 @@ public class SymbolTable {
     }
 
     /**
+     * Removes a table from the catalog.
+     *
+     * @param name The table name to remove
+     * @return true if the table was removed, false if it didn't exist
+     */
+    public boolean removeTable(String name) {
+        return catalog.remove(name.toLowerCase()) != null;
+    }
+
+    /**
      * Resolves a table name against the catalog (case-insensitive).
      *
      * @param name The table name to resolve
@@ -56,6 +66,58 @@ public class SymbolTable {
      */
     public boolean hasTable(String name) {
         return catalog.containsKey(name.toLowerCase());
+    }
+
+    /**
+     * Adds a column to an existing table.
+     *
+     * @param tableName The table to modify
+     * @param column    The column to add
+     * @return true if successful, false if table doesn't exist
+     */
+    public boolean addColumnToTable(String tableName, ColumnInfo column) {
+        TableInfo table = resolveTable(tableName);
+        if (table != null) {
+            table.addColumn(column);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Removes a column from an existing table.
+     *
+     * @param tableName  The table to modify
+     * @param columnName The column to remove
+     * @return true if successful, false if table or column doesn't exist
+     */
+    public boolean removeColumnFromTable(String tableName, String columnName) {
+        TableInfo table = resolveTable(tableName);
+        if (table != null) {
+            return table.removeColumn(columnName);
+        }
+        return false;
+    }
+
+    /**
+     * Renames a table in the catalog.
+     *
+     * @param oldName The current table name
+     * @param newName The new table name
+     * @return true if successful, false if old table doesn't exist or new name is taken
+     */
+    public boolean renameTable(String oldName, String newName) {
+        if (!hasTable(oldName) || hasTable(newName)) {
+            return false;
+        }
+        TableInfo table = catalog.remove(oldName.toLowerCase());
+        // Create a new TableInfo with the new name and copy columns
+        TableInfo renamedTable = new TableInfo(newName);
+        for (ColumnInfo column : table.getColumns()) {
+            renamedTable.addColumn(column);
+        }
+        catalog.put(newName.toLowerCase(), renamedTable);
+        return true;
     }
 
     // ==================== Table Alias Management ====================

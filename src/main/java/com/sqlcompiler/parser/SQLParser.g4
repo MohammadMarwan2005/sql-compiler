@@ -9,12 +9,30 @@ options {
     visitor = true;
 }
 
-// Main entry point
+// Main entry point - supports multiple statements
+script
+    :   statement+ EOF
+    ;
+
+// Single query (for backward compatibility)
 query
-    :   selectStatement SEMICOLON? EOF
-    |   insertStatement SEMICOLON? EOF
-    |   updateStatement SEMICOLON? EOF
-    |   deleteStatement SEMICOLON? EOF
+    :   statement EOF
+    ;
+
+// A single SQL statement
+statement
+    :   selectStatement SEMICOLON?
+    |   insertStatement SEMICOLON?
+    |   updateStatement SEMICOLON?
+    |   deleteStatement SEMICOLON?
+    |   createTableStatement SEMICOLON?
+    |   dropTableStatement SEMICOLON?
+    |   alterTableStatement SEMICOLON?
+    |   truncateTableStatement SEMICOLON?
+    |   createIndexStatement SEMICOLON?
+    |   dropIndexStatement SEMICOLON?
+    |   createDatabaseStatement SEMICOLON?
+    |   dropDatabaseStatement SEMICOLON?
     ;
 
 // SELECT statement
@@ -38,12 +56,25 @@ columnList
     ;
 
 column
-    :   (tableName DOT)? IDENT (AS IDENT)?      # columnName
-    |   expression (AS IDENT)?                  # columnWithExpression
+    :   (tableName DOT)? identifier (AS identifier)?      # columnName
+    |   expression (AS identifier)?                       # columnWithExpression
     ;
 
 tableName
-    :   IDENT (AS IDENT)?
+    :   schemaName DOT identifier (AS identifier)?        # qualifiedTableName
+    |   identifier (AS identifier)?                       # simpleTableName
+    ;
+
+// Schema name (e.g., dbo)
+schemaName
+    :   identifier
+    ;
+
+// Identifier can be regular, quoted, or bracket-quoted
+identifier
+    :   IDENT
+    |   QUOTED_IDENT
+    |   BRACKET_IDENT
     ;
 
 // Expressions
@@ -60,7 +91,12 @@ logicalAndExpression
     ;
 
 comparisonExpression
-    :   additiveExpression (comparisonOp additiveExpression)?
+    :   additiveExpression (comparisonOp additiveExpression)?       # simpleComparison
+    |   additiveExpression IN LPAREN valueList RPAREN               # inExpression
+    |   additiveExpression NOT IN LPAREN valueList RPAREN           # notInExpression
+    |   additiveExpression BETWEEN additiveExpression AND additiveExpression  # betweenExpression
+    |   additiveExpression IS NULL                                  # isNullExpression
+    |   additiveExpression IS NOT NULL                              # isNotNullExpression
     ;
 
 additiveExpression
@@ -78,9 +114,9 @@ unaryExpression
 
 primaryExpression
     :   LPAREN expression RPAREN                # parenExpression
-    |   (tableName DOT)? IDENT                  # columnReference
-    |   USER_VAR                                 # userVariable
-    |   literal                                  # literalExpression
+    |   (tableName DOT)? identifier             # columnReference
+    |   USER_VAR                                # userVariable
+    |   literal                                 # literalExpression
     ;
 
 comparisonOp
@@ -117,7 +153,12 @@ insertStatement
     ;
 
 valueList
-    :   literal (COMMA literal)*
+    :   valueItem (COMMA valueItem)*
+    ;
+
+valueItem
+    :   literal
+    |   expression
     ;
 
 // UPDATE statement
@@ -132,12 +173,147 @@ assignmentList
     ;
 
 assignment
-    :   IDENT EQ expression
+    :   identifier EQ expression
     ;
 
 // DELETE statement
 deleteStatement
     :   DELETE FROM tableName
         (WHERE expression)?
+    ;
+
+// ==================== DDL Statements ====================
+
+// CREATE TABLE statement
+createTableStatement
+    :   CREATE TABLE (IF NOT EXISTS)? tableIdentifier
+        LPAREN columnDefinitionList (COMMA tableConstraint)* RPAREN
+    ;
+
+tableIdentifier
+    :   (schemaName DOT)? identifier
+    ;
+
+columnDefinitionList
+    :   columnDefinition (COMMA columnDefinition)*
+    ;
+
+columnDefinition
+    :   identifier dataType columnConstraint*
+    ;
+
+dataType
+    :   TYPE_INT                                            # intType
+    |   TYPE_INTEGER                                        # integerType
+    |   TYPE_BIGINT                                         # bigintType
+    |   TYPE_SMALLINT                                       # smallintType
+    |   TYPE_TINYINT                                        # tinyintType
+    |   TYPE_FLOAT                                          # floatType
+    |   TYPE_DOUBLE                                         # doubleType
+    |   TYPE_DECIMAL (LPAREN INT (COMMA INT)? RPAREN)?      # decimalType
+    |   TYPE_NUMERIC (LPAREN INT (COMMA INT)? RPAREN)?      # numericType
+    |   TYPE_VARCHAR LPAREN (INT | TYPE_MAX) RPAREN         # varcharType
+    |   TYPE_NVARCHAR LPAREN (INT | TYPE_MAX) RPAREN        # nvarcharType
+    |   TYPE_CHAR (LPAREN INT RPAREN)?                      # charType
+    |   TYPE_NCHAR (LPAREN INT RPAREN)?                     # ncharType
+    |   TYPE_TEXT                                           # textType
+    |   TYPE_NTEXT                                          # ntextType
+    |   TYPE_BOOLEAN                                        # booleanType
+    |   TYPE_BOOL                                           # boolType
+    |   TYPE_DATE                                           # dateType
+    |   TYPE_DATETIME                                       # datetimeType
+    |   TYPE_TIMESTAMP                                      # timestampType
+    |   TYPE_TIME                                           # timeType
+    |   TYPE_BLOB                                           # blobType
+    ;
+
+columnConstraint
+    :   NOT NULL                                            # notNullConstraint
+    |   NULL                                                # nullConstraint
+    |   PRIMARY KEY (CLUSTERED | NONCLUSTERED)?             # primaryKeyColumnConstraint
+    |   UNIQUE                                              # uniqueColumnConstraint
+    |   DEFAULT literal                                     # defaultConstraint
+    |   AUTO_INCREMENT                                      # autoIncrementConstraint
+    |   REFERENCES tableIdentifier (LPAREN identifier RPAREN)?  # referencesConstraint
+    |   CHECK LPAREN expression RPAREN                      # checkColumnConstraint
+    ;
+
+tableConstraint
+    :   PRIMARY KEY (CLUSTERED | NONCLUSTERED)? LPAREN columnNameList RPAREN  # primaryKeyTableConstraint
+    |   UNIQUE (CLUSTERED | NONCLUSTERED)? (KEY)? (identifier)? LPAREN columnNameList RPAREN  # uniqueTableConstraint
+    |   FOREIGN KEY (identifier)? LPAREN columnNameList RPAREN
+        REFERENCES tableIdentifier LPAREN columnNameList RPAREN
+        (ON DELETE referenceAction)? (ON UPDATE referenceAction)?             # foreignKeyConstraint
+    |   CHECK LPAREN expression RPAREN                                        # checkTableConstraint
+    |   CONSTRAINT identifier tableConstraint                                 # namedConstraint
+    ;
+
+columnNameList
+    :   identifier (COMMA identifier)*
+    ;
+
+referenceAction
+    :   CASCADE
+    |   RESTRICT
+    |   SET NULL
+    |   SET DEFAULT
+    ;
+
+// DROP TABLE statement
+dropTableStatement
+    :   DROP TABLE (IF EXISTS)? tableIdentifier (CASCADE | RESTRICT)?
+    ;
+
+// ALTER TABLE statement
+alterTableStatement
+    :   ALTER TABLE tableIdentifier alterAction (COMMA alterAction)*
+    ;
+
+alterAction
+    :   ADD (COLUMN)? columnDefinition                                        # addColumn
+    |   ADD tableConstraint                                                   # addConstraint
+    |   DROP (COLUMN)? identifier (CASCADE | RESTRICT)?                       # dropColumn
+    |   DROP CONSTRAINT identifier                                            # dropConstraint
+    |   DROP PRIMARY KEY                                                      # dropPrimaryKey
+    |   DROP FOREIGN KEY identifier                                           # dropForeignKey
+    |   DROP INDEX identifier                                                 # dropIndexAction
+    |   MODIFY (COLUMN)? identifier dataType columnConstraint*                # modifyColumn
+    |   CHANGE (COLUMN)? identifier identifier dataType columnConstraint*    # changeColumn
+    |   RENAME TO tableIdentifier                                             # renameTable
+    |   RENAME COLUMN identifier TO identifier                                # renameColumn
+    ;
+
+// TRUNCATE TABLE statement
+truncateTableStatement
+    :   TRUNCATE TABLE? tableIdentifier
+    ;
+
+// CREATE INDEX statement
+createIndexStatement
+    :   CREATE (UNIQUE)? (CLUSTERED | NONCLUSTERED)? INDEX (IF NOT EXISTS)? identifier
+        ON tableIdentifier LPAREN indexColumnList RPAREN
+    ;
+
+indexColumnList
+    :   indexColumn (COMMA indexColumn)*
+    ;
+
+indexColumn
+    :   identifier (ASC | DESC)?
+    ;
+
+// DROP INDEX statement
+dropIndexStatement
+    :   DROP INDEX (IF EXISTS)? identifier (ON tableIdentifier)?
+    ;
+
+// CREATE DATABASE statement
+createDatabaseStatement
+    :   CREATE DATABASE (IF NOT EXISTS)? identifier
+    ;
+
+// DROP DATABASE statement
+dropDatabaseStatement
+    :   DROP DATABASE (IF EXISTS)? identifier
     ;
 
