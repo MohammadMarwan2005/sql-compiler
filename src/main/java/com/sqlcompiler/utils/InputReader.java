@@ -1,5 +1,9 @@
 package com.sqlcompiler.utils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Scanner;
 
 public class InputReader {
@@ -22,6 +26,18 @@ public class InputReader {
         }
         
         return input.toString();
+    }
+    
+    /**
+     * Reads the entire contents of a file and returns it as a String.
+     *
+     * @param filePath the path to the file to read
+     * @return the contents of the file as a String
+     * @throws IOException if the file cannot be read
+     */
+    public static String readFromFile(String filePath) throws IOException {
+        Path path = Paths.get(filePath);
+        return Files.readString(path);
     }
 }
 

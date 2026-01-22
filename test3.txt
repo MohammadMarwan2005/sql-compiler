@@ -1,0 +1,1 @@
+INSERT INTO users (name, age) VALUES ('Sa7oom', 23)

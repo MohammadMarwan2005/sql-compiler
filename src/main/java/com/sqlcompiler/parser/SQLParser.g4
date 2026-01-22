@@ -4,7 +4,10 @@ parser grammar SQLParser;
 package com.sqlcompiler.parser;
 }
 
-options { tokenVocab = SQLLexer; }
+options {
+    tokenVocab = SQLLexer;
+    visitor = true;
+}
 
 // Main entry point
 query
